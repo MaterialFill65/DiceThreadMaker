@@ -371,6 +371,7 @@ export class cardGrid {
     }
 
     public addCard(data: Card) {
+        data = structuredClone(data)
         const card = createCardElement(data)
         this.stage.appendChild(card);
         const meta: Meta = {
