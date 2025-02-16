@@ -629,64 +629,6 @@ function findFirstZero(grid: Grid, start: Position): Position | null {
     return null;
 }
 
-function _findNearestZeroBFS(grid: Grid, start: Position): Position | null {
-    const rows = grid.length;
-    if (rows === 0) return null; // グリッドなし
-    const cols = grid[0].length;
-
-    // バリテーション
-    if (start.y < 0 || start.y >= rows || start.x < 0 || start.x >= cols) {
-        console.warn("Out of grid.");
-        return null; // 入力がおかしい
-    }
-
-    const startX = Math.floor(start.y);
-    const startY = Math.floor(start.x);
-
-    if (grid[startX][startY] == null) {
-        return { x: startY, y: startX }; // ポジション開始時が行けそうだったら
-    }
-
-    const queue: Position[] = [{ x: startY, y: startX }];
-    const visited: boolean[][] = Array(rows)
-        .fill(null)
-        .map(() => Array(cols).fill(false));
-    visited[startX][startY] = true;
-
-    const directions: Position[] = [
-        { x: 1, y: 0 }, // 上
-        { x: -1, y: 0 }, // 下
-        { x: 0, y: 1 }, // 右
-        { x: 0, y: -1 }, // 左
-    ];
-
-    while (queue.length > 0) {
-        const current = queue.shift()!;
-
-        for (const dir of directions) {
-            const nextX = current.y + dir.y;
-            const nextY = current.x + dir.x;
-
-            // チェックして次
-            if (
-                nextX >= 0 &&
-                nextX < rows &&
-                nextY >= 0 &&
-                nextY < cols &&
-                !visited[nextX][nextY]
-            ) {
-                if (grid[nextX][nextY] == null) {
-                    return { x: nextY, y: nextX };
-                }
-                queue.push({ x: nextY, y: nextX });
-                visited[nextX][nextY] = true;
-            }
-        }
-    }
-
-    return null; // 何の成果も得られませんでした！
-}
-
 function findMinRectangle(
     array: Grid
 ): { x: number; y: number; height: number; width: number } | null {
