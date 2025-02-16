@@ -15,6 +15,8 @@
 
 .card-clone {
   transition-duration: 0.3s;
+  z-index: 2;
+  opacity: 0.8;
 }
 
 .card-charDisplay {
@@ -24,20 +26,23 @@
   flex-direction: column-reverse;
   margin: 0;
   padding: 0;
+  height: 100%;
+  width: 100%;
 }
 
 .card-charNum {
   margin: 0;
-  position: relative;
+  position: absolute;
   font-size: 60px;
   top: 10px;
 }
 
 .card-charName {
   margin: 0;
-  position: relative;
+  position: absolute;
   font-size: 60px;
-  bottom: 10px;
+  bottom: 0px;
+  width: 100%;
 }
 
 .card-inner {

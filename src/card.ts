@@ -4,6 +4,7 @@ export type Card = {
     name: string;
     num: number;
     background: string;
+    font?: number;
     main_img: string;
 };
 type Position = { x: number; y: number };
@@ -24,12 +25,15 @@ type pointerMeta = {
 type Grid = (Meta | null)[][];
 
 function createCardElement(data: Card) {
-    const nameElement = document.createElement("h1");
-    nameElement.id = "name";
-    nameElement.textContent = data.name;
     const numElement = document.createElement("h2");
     numElement.id = "num";
     numElement.textContent = data.num.toString();
+    const nameElement = document.createElement("h1");
+    nameElement.id = "name";
+    nameElement.innerHTML = data.name;
+    if(data.font){
+        nameElement.style.fontSize = `${data.font}px`
+    }
     const cardElement = document.createElement("div");
     const card_innerElement = document.createElement("div");
     cardElement.classList.add("card");
@@ -59,7 +63,7 @@ function createCloneElement() {
     clone.classList.add("card");
     clone.classList.add("card-clone");
     clone_inner.classList.add("card-inner");
-    clone.style.zIndex = "-1";
+    clone.style.zIndex = "2";
     clone.style.pointerEvents = "none";
     clone.appendChild(clone_inner);
     clone.style.borderRadius =
@@ -126,14 +130,21 @@ export class cardGrid {
             if (pointerId !== e.pointerId) return;
             if (!isDragging) return;
             e.preventDefault();
-            const x = (this.translates.x = e.pageX - shiftX);
-            const y = (this.translates.y = e.pageY - shiftY);
-            this.stage.style.transform = `translate(${x}px, ${y}px)`;
-            this.heightDiv.style.transform = `translate(${x - 100}px, ${y}px)`;
-            this.widthDiv.style.transform = `translate(${x - 100}px, ${y - 50}px)`;
-            this.outline.style.transform = `translate(${x}px, ${y}px)`;
+            const x = e.pageX - shiftX;
+            const y = e.pageY - shiftY;
+            this.moveGrid(x, y)
+
         });
         this.outline.classList.add("outline")
+    }
+
+    public moveGrid(x: number, y: number) {
+        this.translates.x = x;
+        this.translates.y = y;
+        this.stage.style.transform = `translate(${x}px, ${y}px)`;
+        this.heightDiv.style.transform = `translate(${x - 100}px, ${y}px)`;
+        this.widthDiv.style.transform = `translate(${x - 100}px, ${y - 50}px)`;
+        this.outline.style.transform = `translate(${x}px, ${y}px)`;
     }
 
     set height(x: number) {
@@ -183,10 +194,11 @@ export class cardGrid {
         return this.grid[0]!.length;
     }
 
-    private findNull(x: number, y: number) {
+    private find(x: number, y: number) {
         const normal_x = Math.min(Math.max(0, x), this.grid[0].length - 1); // 正規化
         const normal_y = Math.min(Math.max(0, y), this.grid.length - 1);
-        return findNearestZeroBFS(this.grid, { x: normal_x, y: normal_y });
+        return {x: Math.floor(normal_x), y: Math.floor(normal_y) }
+        // return findNearestZeroBFS(this.grid, { x: normal_x, y: normal_y });
     }
 
     private startDrag(ev: PointerEvent, meta: Meta) {
@@ -219,8 +231,8 @@ export class cardGrid {
             elements: { card: meta.card, clone },
             shift: { x: shiftX, y: shiftY },
             meta,
-        };
-        this.dragging(ev);
+        }
+        this.dragging(ev)
     }
 
     private dragging(ev: PointerEvent) {
@@ -233,18 +245,16 @@ export class cardGrid {
             }px)`;
 
         const pos = elements.card.getBoundingClientRect();
-        const result = this.findNull(
+        const result = this.find(
             (pos.x - this.translates.x + pos.width / 2) / pos.width,
             (pos.y - this.translates.y + pos.height / 2) / pos.height
         );
-        if (result) {
-            const { x, y } = result;
+        const { x, y } = result;
 
-            this.pointers[ev.pointerId]!.target_pos = { x, y };
+        this.pointers[ev.pointerId]!.target_pos = { x, y };
 
-            elements.clone.style.transform = `translate(${x * pos.width}px, ${y * pos.height
-                }px)`;
-        }
+        elements.clone.style.transform = `translate(${x * pos.width}px, ${y * pos.height
+            }px)`;
     }
 
     private stopDrag(ev: PointerEvent) {
@@ -266,7 +276,33 @@ export class cardGrid {
             elements.card.style.transitionDuration = "0.3s";
             elements.card.style.transform = `translate(${x * pos.width}px, ${y * pos.height
                 }px)`;
-            this.grid[meta.position.y!][meta.position.x!] = null;
+            const target_card = this.grid[y][x]
+            if (target_card){
+                target_card.position.x = meta.position.x
+                target_card.position.y = meta.position.y
+                target_card.card.style.borderRadius = "calc(var(--card-inner-size) + var(--card-padding))";
+                target_card.card.style.transition = "";
+                target_card.card.style.transitionDuration = "0.3s";
+                target_card.card.style.transform = `translate(${meta.position.x! * pos.width}px, ${meta.position.y! * pos.height
+                    }px)`;
+                {
+                    const func = () => {
+                        target_card.card.style.borderRadius = "";
+                        target_card.card.style.zIndex = "1";
+                    };
+                    const id = setTimeout(func, 300);
+                    target_card.times.push(id);
+                }
+                {
+                    const func = () => {
+                        target_card.card.style.transitionDuration = "";
+                        meta.times = [];
+                    };
+                    const id = setTimeout(func, 600);
+                    target_card.times.push(id);
+                }
+            }
+            this.grid[meta.position.y!][meta.position.x!] = this.grid[y][x];
             meta.position.x = x;
             meta.position.y = y;
 
@@ -338,6 +374,15 @@ export class cardGrid {
         nameInput.value = meta.data.name;
         form.appendChild(nameInput);
 
+        const fontLabel = document.createElement("label");
+        fontLabel.textContent = "文字サイズ:";
+        form.appendChild(fontLabel);
+
+        const fontInput = document.createElement("input");
+        fontInput.type = "number";
+        fontInput.value = meta.data.font ? meta.data.font.toString() : "60";
+        form.appendChild(fontInput);
+
         const backgroundLabel = document.createElement("label");
         backgroundLabel.textContent = "背景色:";
         form.appendChild(backgroundLabel);
@@ -365,13 +410,22 @@ export class cardGrid {
             meta.data.name = nameInput.value;
             meta.data.background = backgroundInput.value;
             meta.data.main_img = imgInput.value;
+            meta.data.font = Number(fontInput.value);
 
-            meta.card.querySelector("h1#name")!.textContent = meta.data.name;
+            const nameElement = meta.card.querySelector("h1#name")! as HTMLElement;
+            nameElement.innerHTML = meta.data.name;
+            nameElement.style.fontSize = `${meta.data.font}px`
             meta.card.style.background = meta.data.background;
             (
                 meta.card.querySelector("div#cardInner")! as HTMLDivElement
             ).style.background = meta.data.background;
-            meta.card.querySelector("img")!.src = meta.data.main_img;
+            const imgElement = meta.card.querySelector("img")!
+            if (meta.data.main_img){
+                imgElement.src = meta.data.main_img;
+                imgElement.style.display = ""
+            }else{
+                imgElement.style.display = "none"
+            }
             modal.remove();
         };
         buttonContainer.appendChild(saveButton);
@@ -443,6 +497,11 @@ export class cardGrid {
     }
 
     public addCard(data: Card) {
+        const result = findFirstZero(this.grid, { x: 0, y: 0 });
+        if (!result) {
+            alert("カードがいっぱいです！どれか削除してください！")
+            return
+        }
         data = structuredClone(data);
         const card = createCardElement(data);
         this.stage.appendChild(card);
@@ -480,38 +539,26 @@ export class cardGrid {
         });
 
         const pos = card.getBoundingClientRect();
-        const result = findFirstZero(this.grid, { x: 0, y: 0 });
+        const { x, y } = result;
 
-        if (result) {
-            const { x, y } = result;
+        card.style.transition = "";
+        card.style.transitionDuration = "0.3s";
+        card.style.transform = `translate(${x * pos.width}px, ${y * pos.height
+            }px)`;
+        meta.position.x = x;
+        meta.position.y = y;
+        this.grid[y][x] = meta;
+        this.resizeStage();
 
-            card.style.transition = "";
-            card.style.transitionDuration = "0.3s";
-            card.style.transform = `translate(${x * pos.width}px, ${y * pos.height
-                }px)`;
-            meta.position.x = x;
-            meta.position.y = y;
-            this.grid[y][x] = meta;
-            this.resizeStage();
+        setTimeout(() => {
+            card.style.borderRadius = "";
+            card.style.zIndex = "1";
+        }, 300);
+        setTimeout(() => {
+            card.style.transitionDuration = "";
+        }, 600);
 
-            setTimeout(() => {
-                card.style.borderRadius = "";
-                card.style.zIndex = "1";
-                setTimeout(() => {
-                    card.style.transitionDuration = "";
-                }, 300);
-            }, 300);
-
-            return { x, y };
-        } else {
-            setTimeout(() => {
-                card.style.borderRadius = "";
-                card.style.zIndex = "1";
-                setTimeout(() => {
-                    card.style.transitionDuration = "";
-                }, 300);
-            }, 300);
-        }
+        return { x, y };
     }
 
     public resizeStage() {
@@ -582,7 +629,7 @@ function findFirstZero(grid: Grid, start: Position): Position | null {
     return null;
 }
 
-function findNearestZeroBFS(grid: Grid, start: Position): Position | null {
+function _findNearestZeroBFS(grid: Grid, start: Position): Position | null {
     const rows = grid.length;
     if (rows === 0) return null; // グリッドなし
     const cols = grid[0].length;

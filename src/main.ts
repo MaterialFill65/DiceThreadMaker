@@ -29,6 +29,13 @@ const data: Card[] = [
         main_img: "./mao.png"
     },
     {
+        name: "リーリヤ",
+        num: 5,
+        background: "#edfdff",
+        main_img: "./lilja.png",
+        font: 45
+    },
+    {
         name: "千奈",
         num: 6,
         background: "#f9ad60",
@@ -40,12 +47,7 @@ const data: Card[] = [
         background: "#a3fd4b",
         main_img: "./sumika.png"
     },
-    {
-        name: "リーリヤ",
-        num: 5,
-        background: "#edfdff",
-        main_img: "./lilja.png"
-    },
+    
     {
         name: "広",
         num: 8,
@@ -131,34 +133,45 @@ const data: Card[] = [
         main_img: "./kuroi.png"
     },
     {
-        name: "はつみ",
+        name: "はつみ<font size='5'>ちゃん</font>",
         num: 19,
         background: "#f8c482",
-        main_img: "./hatsumi.png"
+        main_img: "./hatsumi.png",
+        font: 50
     },
     {
-        name: "Vo トレーナー",
+        name: "Vo<font size='5'>トレーナー</font>",
         num: 20,
-        background: "#fa6e00",
-        main_img: "./Vo.png"
+        background: "#f2178b",
+        main_img: "./Vo.png",
+        font: 50
     },
     {
-        name: "Da トレーナー",
+        name: "Da<font size='5'>トレーナー</font>",
         num: 21,
-        background: "#fa6e00",
-        main_img: "./Da.png"
+        background: "#0899f7",
+        main_img: "./Da.png",
+        font: 50
     },
     {
-        name: "Vi トレーナー",
+        name: "Vi<font size='5'>トレーナー</font>",
         num: 22,
-        background: "#fa6e00",
-        main_img: "./Vi.png"
+        background: "#feb209",
+        main_img: "./Vi.png",
+        font: 50
+    },
+    {
+        name: "学P",
+        num: 23,
+        background: "#fff",
+        main_img: "./producer.png"
     }
 ]
 
 const grid = new cardGrid(app)
 grid.height = 20
 grid.width = 3
+grid.moveGrid(200,100)
 app.appendChild(grid.stage)
 app.appendChild(grid.outline)
 
@@ -170,10 +183,11 @@ document.body.appendChild(addButton);
 
 const cardList = document.createElement('div');
 cardList.className = 'card-list';
+const domparse = new DOMParser()
 data.forEach(datum => {
     const listItem = document.createElement('div');
     listItem.className = 'card-list-item';
-    listItem.textContent = datum.name;
+    listItem.textContent = domparse.parseFromString(datum.name, "text/html").body.textContent;
     listItem.onclick = () => {
         grid.addCard(datum);
     };
@@ -233,6 +247,11 @@ function exportCardsAsImage() {
         grid.stage.style.boxShadow = "";
         grid.stage.style.transform = `translate(${grid.translates.x}px, ${grid.translates.y}px)`;
         link.click();
+    }).catch(e=>{
+        console.warn(e);
+        grid.stage.style.boxShadow = "";
+        grid.stage.style.transform = `translate(${grid.translates.x}px, ${grid.translates.y}px)`;
+        alert("画像の作成に失敗しました。")
     });
 }
 
