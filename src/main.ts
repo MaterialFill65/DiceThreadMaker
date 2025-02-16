@@ -187,12 +187,14 @@ data.forEach(datum => {
 function exportCardsAsImage() {
     grid.resizeStage()
     grid.stage.style.boxShadow = "none";
+    grid.stage.style.transform = "";
     html_to_canvas.toPng(grid.stage, { skipAutoScale: true }).then(png => {
         const link = document.createElement('a');
         console.log(png)
         link.href = png;
         link.download = 'cards.png';
         grid.stage.style.boxShadow = "";
+        grid.stage.style.transform = `translate(${grid.translates.x}px, ${grid.translates.y}px)`;
         link.click();
     });
 }
