@@ -279,6 +279,7 @@ body {
   box-shadow: 0 0 0 3px red;     
   position: absolute;
   top: 0;
+  pointer-events: none;
 }
 
 * {
