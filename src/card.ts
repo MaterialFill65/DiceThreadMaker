@@ -259,15 +259,6 @@ export class cardGrid {
         nameInput.value = meta.data.name;
         form.appendChild(nameInput);
 
-        const numLabel = document.createElement('label');
-        numLabel.textContent = '番号:';
-        form.appendChild(numLabel);
-
-        const numInput = document.createElement('input');
-        numInput.type = 'number';
-        numInput.value = meta.data.num.toString();
-        form.appendChild(numInput);
-
         const backgroundLabel = document.createElement('label');
         backgroundLabel.textContent = '背景色:';
         form.appendChild(backgroundLabel);
@@ -293,12 +284,10 @@ export class cardGrid {
         saveButton.type = 'button';
         saveButton.onclick = () => {
             meta.data.name = nameInput.value;
-            meta.data.num = parseInt(numInput.value);
             meta.data.background = backgroundInput.value;
             meta.data.main_img = imgInput.value;
 
             meta.card.querySelector("h1#name")!.textContent = meta.data.name;
-            meta.card.querySelector("h2#num")!.textContent = meta.data.num.toString();
             meta.card.style.background = meta.data.background;
             (meta.card.querySelector("div#cardInner")! as HTMLDivElement).style.background = meta.data.background;
             meta.card.querySelector("img")!.src = meta.data.main_img
@@ -438,6 +427,15 @@ export class cardGrid {
     }
 
     public resizeStage(){
+        let counter = 1;
+        for (let y = 0; y < this.grid.length; y++) {
+            for (let x = 0; x < this.grid[y].length; x++) {
+                if (this.grid[y][x] !== null) {
+                    this.grid[y][x]!.data.num = counter++;
+                    this.grid[y][x]!.card.querySelector("h2#num")!.textContent = this.grid[y][x]!.data.num.toString();
+                }
+            }
+        }
         const result = findMinRectangle(this.grid)
         if (result){
             this.stage.style.width = `${(result.width + result.x) * 316}px`;
