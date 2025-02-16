@@ -99,6 +99,24 @@ const data: Card[] = [
         num: 16,
         background: "#9e9cf1",
         main_img: "./yuu.png"
+    },
+    {
+        name: "燐羽",
+        num: 17,
+        background: "#f1bff5",
+        main_img: "./rinnha.png"
+    },
+    {
+        name: "黒井",
+        num: 18,
+        background: "#fff",
+        main_img: "./kuroi.png"
+    },
+    {
+        name: "はつみ",
+        num: 19,
+        background: "#f8c482",
+        main_img: "./hatsumi.png"
     }
 ]
 
