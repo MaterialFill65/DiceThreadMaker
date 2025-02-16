@@ -122,8 +122,9 @@ const data: Card[] = [
 
 const grid = new cardGrid(app)
 grid.height = 20
-grid.width = 20
+grid.width = 3
 app.appendChild(grid.stage)
+app.appendChild(grid.outline)
 
 const addButton = document.createElement('button');
 addButton.className = 'add-card-button';

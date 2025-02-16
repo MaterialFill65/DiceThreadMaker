@@ -69,6 +69,25 @@
   align-items: center;
   height: 100%;
 }
+
+.card-list {
+  position: absolute;
+  bottom: 80px;
+  left: 20px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  display: none;
+  flex-direction: column;
+  z-index: 2000;
+}
+
+.card-list-item {
+  margin: 5px 0;
+  cursor: pointer;
+}
+
 .dli-plus {
   display: inline-block;
   vertical-align: middle;
@@ -115,24 +134,6 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.card-list {
-  position: absolute;
-  bottom: 80px;
-  left: 20px;
-  background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  display: none;
-  flex-direction: column;
-  z-index: 2000;
-}
-
-.card-list-item {
-  margin: 5px 0;
-  cursor: pointer;
 }
 
 .edit-modal {
@@ -272,8 +273,12 @@ body {
 }
 .stage{
   touch-action: none;
-  box-shadow: 0 3px 0px #f00 inset,
-            3px 0 0px #f00 inset;
+}
+
+.outline{
+  box-shadow: 0 0 0 3px red;     
+  position: absolute;
+  top: 0;
 }
 
 * {

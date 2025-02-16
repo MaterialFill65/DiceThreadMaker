@@ -1,0 +1,82 @@
+.card {
+  --card-padding: 8px;
+  --card-inner-size: 12px;
+
+  position: absolute;
+  width: 300px;
+  height: 150px;
+  background-color: gray;
+  padding: var(--card-padding);
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+  overflow: hidden;
+}
+
+.card-clone {
+  transition-duration: 0.3s;
+}
+
+.card-charDisplay {
+  display: flex;
+  position: absolute;
+  left: 20px;
+  flex-direction: column-reverse;
+  margin: 0;
+  padding: 0;
+}
+
+.card-charNum {
+  margin: 0;
+  position: relative;
+  font-size: 60px;
+  top: 10px;
+}
+
+.card-charName {
+  margin: 0;
+  position: relative;
+  font-size: 60px;
+  bottom: 10px;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--card-inner-size);
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-inner img {
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  height: 200%;
+  pointer-events: none;
+  user-select: none;
+  touch-action: none;
+}
+
+.card-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.control-panel {
+  display: flex;
+  gap: 10px;
+  position: absolute;
+}
+
+.control-panel label {
+  font-size: 14px;
+}
+
+.control-panel input {
+  width: 50px;
+}
