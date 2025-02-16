@@ -93,6 +93,12 @@ const data: Card[] = [
         num: 15,
         background: "#f6b445",
         main_img: "./kunio.png"
+    },
+    {
+        name: "優",
+        num: 16,
+        background: "#9e9cf1",
+        main_img: "./yuu.png"
     }
 ]
 
