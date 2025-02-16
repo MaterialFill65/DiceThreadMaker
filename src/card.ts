@@ -202,13 +202,16 @@ export class cardGrid {
         }
         const pos = meta.card.getBoundingClientRect();
 
-        const shiftX = ev.clientX - pos.left + this.translates.x;
-        const shiftY = ev.clientY - pos.top + this.translates.y;
+        const shiftX = ev.clientX - pos.left;
+        const shiftY = ev.clientY - pos.top;
 
         meta.card.style.zIndex = "2000";
         const clone = createCloneElement();
-        clone.style.transform = `translate(${ev.pageX - shiftX}px, ${ev.pageY - shiftY
-            }px)`;
+        clone.style.transform = `translate(${
+            ev.pageX - shiftX
+        }px, ${
+            ev.pageY - shiftY
+        }px)`;
         meta.card.style.transition = "border-radius 0.3s";
         meta.card.style.borderRadius =
             "calc(var(--card-inner-size) + var(--card-padding))";
@@ -226,7 +229,7 @@ export class cardGrid {
         }
         const { elements, shift } = this.pointers[ev.pointerId]!;
 
-        elements.card.style.transform = `translate(${ev.pageX - shift.x}px, ${ev.pageY - shift.y
+        elements.card.style.transform = `translate(${ev.pageX - this.translates.x - shift.x}px, ${ev.pageY - this.translates.y - shift.y
             }px)`;
 
         const pos = elements.card.getBoundingClientRect();
@@ -249,7 +252,7 @@ export class cardGrid {
             return;
         }
         const { elements, shift, meta } = this.pointers[ev.pointerId]!;
-        elements.card.style.transform = `translate(${ev.pageX - shift.x}px, ${ev.pageY - shift.y
+        elements.card.style.transform = `translate(${ev.pageX - this.translates.x - shift.x}px, ${ev.pageY - this.translates.y - shift.y
             }px)`;
         const pos = elements.card.getBoundingClientRect();
 
