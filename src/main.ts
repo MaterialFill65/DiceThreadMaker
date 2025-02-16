@@ -103,8 +103,26 @@ const data: Card[] = [
     {
         name: "燐羽",
         num: 17,
-        background: "#f1bff5",
+        background: "#7e6da3",
         main_img: "./rinnha.png"
+    },
+    {
+        name: "撫子",
+        num: 22,
+        background: "#f9b3ff",
+        main_img: "./nadeshiko.png"
+    },
+    {
+        name: "四音",
+        num: 22,
+        background: "#e64e76",
+        main_img: "./shion.png"
+    },
+    {
+        name: "月花",
+        num: 22,
+        background: "#ad9178",
+        main_img: "./gekka.png"
     },
     {
         name: "黒井",
@@ -117,6 +135,24 @@ const data: Card[] = [
         num: 19,
         background: "#f8c482",
         main_img: "./hatsumi.png"
+    },
+    {
+        name: "Vo トレーナー",
+        num: 20,
+        background: "#fa6e00",
+        main_img: "./Vo.png"
+    },
+    {
+        name: "Da トレーナー",
+        num: 21,
+        background: "#fa6e00",
+        main_img: "./Da.png"
+    },
+    {
+        name: "Vi トレーナー",
+        num: 22,
+        background: "#fa6e00",
+        main_img: "./Vi.png"
     }
 ]
 
