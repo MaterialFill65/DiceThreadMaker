@@ -6,7 +6,7 @@ export type Card = {
 }
 type Position = { x: number; y: number };
 
-type Meta = { card: HTMLDivElement, position: { x?: number, y?: number }, data: Card, times: {id: number, func: () => void}[] }
+type Meta = { card: HTMLDivElement, position: { x?: number, y?: number }, data: Card, times: number[] }
 type pointerMeta = { elements: { card: HTMLDivElement, clone: HTMLDivElement }, shift: Position, meta: Meta, target_pos?: Position }
 
 type Grid = (Meta | null)[][]
@@ -56,7 +56,8 @@ function createCloneElement() {
 }
 
 export class cardGrid {
-    private pointers: { [id: number]: pointerMeta } = {};
+    private pointers: { [id: number]: pointerMeta | null } = {};
+    private store: { [timer_id: number]: HTMLDivElement } = {};
     public grid: Grid = [[null]];
     public stage: HTMLDivElement = document.createElement("div");
     public translates: Position = {
@@ -70,8 +71,9 @@ export class cardGrid {
         let shiftY = 0;
         let pointerId: number | null;
 
-        app.addEventListener('pointerdown', (e) => {
-            if (Array.from(this.stage.children).some(child => child.contains(e.target as HTMLElement))) {
+        document.body.addEventListener('pointerdown', (e) => {
+            const target = e.target as HTMLElement
+            if (Array.from(this.stage.children).some(child => child.contains(target)) || (document.body !== target && app !== target && this.stage !== target)) {
                 return
             }
             isDragging = true;
@@ -81,14 +83,14 @@ export class cardGrid {
             pointerId = e.pointerId
         });
 
-        app.addEventListener('pointerup', (e) => {
-            if(pointerId !== e.pointerId)
+        document.body.addEventListener('pointerup', (e) => {
+            if (pointerId !== e.pointerId)
                 return
             e.preventDefault()
             isDragging = false;
             this.stage.style.cursor = 'default';
         });
-        app.addEventListener('pointerleave', (e) => {
+        document.body.addEventListener('pointerleave', (e) => {
             if (pointerId !== e.pointerId)
                 return
             e.preventDefault()
@@ -96,7 +98,7 @@ export class cardGrid {
             this.stage.style.cursor = 'default';
         });
 
-        app.addEventListener('pointermove', (e) => {
+        document.body.addEventListener('pointermove', (e) => {
             if (pointerId !== e.pointerId)
                 return
             if (!isDragging) return;
@@ -137,18 +139,18 @@ export class cardGrid {
     }
 
     private findNull(x: number, y: number) {
-        const normal_x = Math.min(Math.max(0, x), this.grid[0].length - 1)
+        const normal_x = Math.min(Math.max(0, x), this.grid[0].length - 1) // 正規化
         const normal_y = Math.min(Math.max(0, y), this.grid.length - 1)
         return findNearestZeroBFS(this.grid, { x: normal_x, y: normal_y })
     }
 
     private startDrag(ev: PointerEvent, meta: Meta) {
-        if (meta.position.x && meta.position.y) {
+        if (meta.position.x != null && meta.position.y != null) {
             const original_meta = this.grid[meta.position.y][meta.position.x]
-            if (original_meta){
-                original_meta.times.forEach(a_time => {
-                    clearTimeout(a_time.id)
-                    a_time.func()
+            if (original_meta) {
+                original_meta.times.forEach(timer_id => {
+                    clearTimeout(timer_id)
+
                 });
                 original_meta.times = []
             }
@@ -164,11 +166,15 @@ export class cardGrid {
         clone.style.transform = `translate(${(ev.pageX - shiftX)}px, ${(ev.pageY - shiftY)}px)`;
         meta.card.style.transition = "border-radius 0.3s"
         meta.card.style.borderRadius = "calc(var(--card-inner-size) + var(--card-padding))";
-        this.pointers[ev.pointerId] = { elements: { card: meta.card, clone }, shift: { x: shiftX, y: shiftY }, meta }
+        this.pointers[ev.pointerId] = { elements: { card: meta.card, clone }, shift: { x: shiftX, y: shiftY }, meta };
+        this.dragging(ev)
     }
 
     private dragging(ev: PointerEvent) {
-        const { elements, shift } = this.pointers[ev.pointerId]
+        if (!this.pointers[ev.pointerId]) {
+            return
+        }
+        const { elements, shift } = this.pointers[ev.pointerId]!
 
         elements.card.style.transform = `translate(${(ev.pageX - shift.x)}px, ${(ev.pageY - shift.y)}px)`;
 
@@ -177,18 +183,21 @@ export class cardGrid {
         if (result) {
             const { x, y } = result
 
-            this.pointers[ev.pointerId].target_pos = { x, y }
+            this.pointers[ev.pointerId]!.target_pos = { x, y }
 
             elements.clone.style.transform = `translate(${x * pos.width}px, ${y * pos.height}px)`
         }
     }
 
     private stopDrag(ev: PointerEvent) {
-        const { elements, shift, meta } = this.pointers[ev.pointerId]
+        if (!this.pointers[ev.pointerId]){
+            return
+        }
+        const { elements, shift, meta } = this.pointers[ev.pointerId]!
         elements.card.style.transform = `translate(${(ev.pageX - shift.x)}px, ${(ev.pageY - shift.y)}px)`;
         const pos = elements.card.getBoundingClientRect();
 
-        const target_pos = this.pointers[ev.pointerId].target_pos
+        const target_pos = this.pointers[ev.pointerId]!.target_pos
         if (target_pos) {
             const { x, y } = target_pos;
             elements.clone.style.transform = `translate(${x * pos.width}px, ${y * pos.height}px)`
@@ -200,41 +209,50 @@ export class cardGrid {
             meta.position.x = x;
             meta.position.y = y;
 
-            const func = () => {
-                elements.clone.remove()
-                elements.card.style.borderRadius = "";
-                elements.card.style.zIndex = "1"
+            {
+                const func = () => {
+                    elements.card.style.borderRadius = "";
+                    elements.card.style.zIndex = "1"
+                }
+                const id = setTimeout(func, 300)
+                this.store[id] = elements.clone
+                setTimeout(() => {
+                    this.store[id].remove()
+                }, 300)
+                meta.times.push(id)
+            }
+            {
                 const func = () => {
                     elements.card.style.transitionDuration = ""
                     meta.times = []
                 }
-                const id = setTimeout(func, 300)
-                meta.times.push({id, func})
+                const id = setTimeout(func, 600)
+                meta.times.push(id)
             }
-
-            const id = setTimeout(func, 300)
-            meta.times.push({id, func})
 
             this.grid[y][x] = meta;
             this.resizeStage()
 
             return { x, y }
         } else {
-            const func = () => {
-                elements.clone.remove()
-                elements.card.style.borderRadius = "";
-                elements.card.style.zIndex = "1"
+            {
+                const func = () => {
+                    elements.card.style.borderRadius = "";
+                    elements.card.style.zIndex = "1"
+                }
+                const id = setTimeout(func, 300)
+                meta.times.push(id)
+            }
+            {
                 const func = () => {
                     elements.card.style.transitionDuration = ""
                     meta.times = []
                 }
-                const id = setTimeout(func, 300)
-                meta.times.push({ id, func })
+                const id = setTimeout(func, 600)
+                meta.times.push(id)
             }
-
-            const id = setTimeout(func, 300)
-            meta.times.push({ id, func })
         }
+        this.pointers[ev.pointerId]!.meta = meta
     }
 
     private createEditModal(meta: Meta) {
@@ -371,25 +389,29 @@ export class cardGrid {
         }
         card.oncontextmenu = this.onContextMenu(meta)
         card.addEventListener("pointerdown", (ev) => {
-            if (ev.pointerType == "touch") {
-                this.startDrag(ev, meta)
-            } else {
-
-                this.startDrag(ev, meta)
+            if (ev.button === 2) {
+                return
             }
-            card.after(this.pointers[ev.pointerId].elements.clone)
+            console.log(ev.type)
+            this.startDrag(ev, meta)
+            card.after(this.pointers[ev.pointerId]!.elements.clone)
 
             const drag = (e: PointerEvent) => this.dragging(e)
 
             document.body.addEventListener("pointermove", drag);
             const out = (e: PointerEvent) => {
-                document.body.removeEventListener("pointermove", drag);
-                this.stopDrag(e)
-                card.removeEventListener("pointerup", out);
-                document.body.removeEventListener("pointerleave", out);
+                if (this.pointers[e.pointerId]){
+                    console.log(e.type, this.pointers[e.pointerId]?.elements.card)
+                    document.body.removeEventListener("pointermove", drag);
+                    this.stopDrag(e)
+                    card.removeEventListener("pointerup", out);
+                    document.body.removeEventListener("pointerleave", out);
+                    this.pointers[e.pointerId] = null;
+                }
             }
             card.addEventListener("pointerup", out)
             document.body.addEventListener("pointerleave", out);
+            // document.body.addEventListener("pointerout", out);
         });
 
         const pos = card.getBoundingClientRect();
@@ -426,7 +448,7 @@ export class cardGrid {
         }
     }
 
-    public resizeStage(){
+    public resizeStage() {
         let counter = 1;
         for (let y = 0; y < this.grid.length; y++) {
             for (let x = 0; x < this.grid[y].length; x++) {
@@ -437,7 +459,7 @@ export class cardGrid {
             }
         }
         const result = findMinRectangle(this.grid)
-        if (result){
+        if (result) {
             this.stage.style.width = `${(result.width + result.x) * 316}px`;
             this.stage.style.height = `${(result.height + result.y) * 166}px`;
         }
