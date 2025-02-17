@@ -77,11 +77,11 @@ export class cardGrid {
     private store: { [timer_id: number]: HTMLDivElement } = {};
     public grid: Grid = [[null]];
     public stage: HTMLDivElement = document.createElement("div");
-    public outline: HTMLDivElement = document.createElement("div");
     public translates: Position = {
         x: 0,
         y: 0,
     };
+    private scale: number = 1;
     heightInput!: HTMLInputElement;
     widthInput!: HTMLInputElement;
     heightDiv!: HTMLDivElement;
@@ -99,10 +99,10 @@ export class cardGrid {
         document.body.addEventListener("pointerdown", (e) => {
             const target = e.target as HTMLElement;
             if (
-                Array.from(this.stage.children).some((child) =>
+                (Array.from(this.stage.children).some((child) =>
                     child.contains(target)
                 ) ||
-                (document.body !== target && app !== target && this.stage !== target)
+                    (document.body !== target && app !== target && this.stage !== target)) && !e.ctrlKey
             ) {
                 return;
             }
@@ -135,16 +135,39 @@ export class cardGrid {
             this.moveGrid(x, y)
 
         });
-        this.outline.classList.add("outline")
+
+        document.body.addEventListener("wheel", (e) => {
+            if (e.ctrlKey) {
+                e.preventDefault();
+            }
+            const scaleAmount = -e.deltaY * 0.001;
+            const x = e.clientX
+            const y = e.clientY
+            this.zoom(scaleAmount, x, y);
+        }, { passive: false });
+    }
+
+    private zoom(scaleAmount: number, x: number, y: number) {
+        const prevScale = this.scale;
+        this.scale += scaleAmount;
+        this.scale = Math.min(Math.max(0.5, this.scale), 2); // Set the minimum and maximum zoom values
+
+        const rect = this.stage.getBoundingClientRect();
+        const offsetX = x / rect.width;
+        const offsetY = y / rect.height;
+
+        const out_x = (this.translates.x - offsetX * rect.width) * (this.scale / prevScale) + offsetX * rect.width;
+        const out_y = (this.translates.y - offsetY * rect.height) * (this.scale / prevScale) + offsetY * rect.height;
+
+        this.moveGrid(out_x, out_y);
     }
 
     public moveGrid(x: number, y: number) {
         this.translates.x = x;
         this.translates.y = y;
-        this.stage.style.transform = `translate(${x}px, ${y}px)`;
+        this.stage.style.transform = `translate(${x}px, ${y}px) scale(${this.scale})`;
         this.heightDiv.style.transform = `translate(${x - 100}px, ${y}px)`;
         this.widthDiv.style.transform = `translate(${x - 100}px, ${y - 50}px)`;
-        this.outline.style.transform = `translate(${x}px, ${y}px)`;
     }
 
     set height(x: number) {
@@ -162,8 +185,6 @@ export class cardGrid {
                 this.grid.push(new Array(this.width).fill(null));
             }
         }
-        this.outline.style.height = `${this.grid.length * 166}px`;
-        this.outline.style.width = `${this.grid[0].length * 316}px`;
         this.heightInput.value = x.toString();
     }
     get height() {
@@ -186,8 +207,6 @@ export class cardGrid {
                 }
             }
         }
-        this.outline.style.height = `${this.grid.length * 166}px`;
-        this.outline.style.width = `${this.grid[0].length * 316}px`;
         this.widthInput.value = x.toString();
     }
     get width() {
@@ -214,25 +233,20 @@ export class cardGrid {
         }
         const pos = meta.card.getBoundingClientRect();
 
-        const shiftX = ev.clientX - pos.left;
-        const shiftY = ev.clientY - pos.top;
+        const shiftX = (ev.pageX - pos.left) / this.scale;
+        const shiftY = (ev.pageY - pos.top) / this.scale;
+        console.log(shiftX, shiftY)
 
         meta.card.style.zIndex = "2000";
         const clone = createCloneElement();
-        clone.style.transform = `translate(${
-            ev.pageX - shiftX
-        }px, ${
-            ev.pageY - shiftY
-        }px)`;
         meta.card.style.transition = "border-radius 0.3s";
-        meta.card.style.borderRadius =
-            "calc(var(--card-inner-size) + var(--card-padding))";
+        meta.card.style.borderRadius = "calc(var(--card-inner-size) + var(--card-padding))";
         this.pointers[ev.pointerId] = {
             elements: { card: meta.card, clone },
             shift: { x: shiftX, y: shiftY },
             meta,
-        }
-        this.dragging(ev)
+        };
+        this.dragging(ev);
     }
 
     private dragging(ev: PointerEvent) {
@@ -241,50 +255,43 @@ export class cardGrid {
         }
         const { elements, shift } = this.pointers[ev.pointerId]!;
 
-        elements.card.style.transform = `translate(${ev.pageX - this.translates.x - shift.x}px, ${ev.pageY - this.translates.y - shift.y
-            }px)`;
+        elements.card.style.transform = `translate(${ev.pageX / this.scale - this.translates.x / this.scale - shift.x}px, ${ev.pageY / this.scale - this.translates.y / this.scale - shift.y}px)`;
 
         const pos = elements.card.getBoundingClientRect();
         const result = this.find(
-            (pos.x - this.translates.x + pos.width / 2) / pos.width,
-            (pos.y - this.translates.y + pos.height / 2) / pos.height
+            (pos.left + pos.width / 2 - this.translates.x) / (pos.width ),
+            (pos.top + pos.height / 2 - this.translates.y) / (pos.height)
         );
         const { x, y } = result;
 
         this.pointers[ev.pointerId]!.target_pos = { x, y };
 
-        elements.clone.style.transform = `translate(${x * pos.width}px, ${y * pos.height
-            }px)`;
+        elements.clone.style.transform = `translate(${x * pos.width / this.scale}px, ${y * pos.height / this.scale}px)`;
     }
 
     private stopDrag(ev: PointerEvent) {
         if (!this.pointers[ev.pointerId]) {
             return;
         }
-        const { elements, shift, meta } = this.pointers[ev.pointerId]!;
-        elements.card.style.transform = `translate(${ev.pageX - this.translates.x - shift.x}px, ${ev.pageY - this.translates.y - shift.y
-            }px)`;
+        const { elements, meta } = this.pointers[ev.pointerId]!;
         const pos = elements.card.getBoundingClientRect();
 
         const target_pos = this.pointers[ev.pointerId]!.target_pos;
         if (target_pos) {
             const { x, y } = target_pos;
-            elements.clone.style.transform = `translate(${x * pos.width}px, ${y * pos.height
-                }px)`;
+            elements.clone.style.transform = `translate(${x * pos.width / this.scale}px, ${y * pos.height / this.scale}px)`;
 
             elements.card.style.transition = "";
             elements.card.style.transitionDuration = "0.3s";
-            elements.card.style.transform = `translate(${x * pos.width}px, ${y * pos.height
-                }px)`;
-            const target_card = this.grid[y][x]
-            if (target_card){
-                target_card.position.x = meta.position.x
-                target_card.position.y = meta.position.y
+            elements.card.style.transform = `translate(${x * pos.width / this.scale}px, ${y * pos.height / this.scale}px)`;
+            const target_card = this.grid[y][x];
+            if (target_card) {
+                target_card.position.x = meta.position.x;
+                target_card.position.y = meta.position.y;
                 target_card.card.style.borderRadius = "calc(var(--card-inner-size) + var(--card-padding))";
                 target_card.card.style.transition = "";
                 target_card.card.style.transitionDuration = "0.3s";
-                target_card.card.style.transform = `translate(${meta.position.x! * pos.width}px, ${meta.position.y! * pos.height
-                    }px)`;
+                target_card.card.style.transform = `translate(${meta.position.x! * pos.width / this.scale}px, ${meta.position.y! * pos.height / this.scale}px)`;
                 {
                     const func = () => {
                         target_card.card.style.borderRadius = "";
@@ -482,6 +489,7 @@ export class cardGrid {
                 meta.card.remove();
                 menu.style.display = "none";
                 menu.remove();
+                this.grid[meta.position.y!][meta.position.x!] = null;
                 document.body.removeEventListener("click", clickHandle);
             };
             menu.appendChild(deleteItem);
@@ -513,10 +521,9 @@ export class cardGrid {
         };
         card.oncontextmenu = this.onContextMenu(meta);
         card.addEventListener("pointerdown", (ev) => {
-            if (ev.button === 2) {
+            if (ev.button === 2 || ev.ctrlKey) {
                 return;
             }
-            console.log(ev.type);
             this.startDrag(ev, meta);
             card.after(this.pointers[ev.pointerId]!.elements.clone);
 
@@ -525,7 +532,6 @@ export class cardGrid {
             document.body.addEventListener("pointermove", drag);
             const out = (e: PointerEvent) => {
                 if (this.pointers[e.pointerId]) {
-                    console.log(e.type, this.pointers[e.pointerId]?.elements.card);
                     document.body.removeEventListener("pointermove", drag);
                     this.stopDrag(e);
                     card.removeEventListener("pointerup", out);
@@ -572,11 +578,9 @@ export class cardGrid {
                 }
             }
         }
-        const result = findMinRectangle(this.grid);
-        if (result) {
-            this.stage.style.width = `${(result.width + result.x) * 316}px`;
-            this.stage.style.height = `${(result.height + result.y) * 166}px`;
-        }
+
+        this.stage.style.width = `${this.width * 316}px`;
+        this.stage.style.height = `${this.height * 166}px`;
     }
 
     private createControlPanel(app: HTMLDivElement) {
@@ -618,6 +622,7 @@ export class cardGrid {
         app.appendChild(controlPanel);
     }
 }
+
 function findFirstZero(grid: Grid, start: Position): Position | null {
     for (let y = start.y; y < grid.length; y++) {
         for (let x = y === start.y ? start.x : 0; x < grid[y].length; x++) {
@@ -627,44 +632,4 @@ function findFirstZero(grid: Grid, start: Position): Position | null {
         }
     }
     return null;
-}
-
-function findMinRectangle(
-    array: Grid
-): { x: number; y: number; height: number; width: number } | null {
-    if (!array || array.length === 0 || array[0].length === 0) {
-        return null; // 空の配列の場合は null を返す
-    }
-
-    const onePositions: { row: number; col: number }[] = [];
-    for (let row = 0; row < array.length; row++) {
-        for (let col = 0; col < array[row].length; col++) {
-            if (array[row][col] !== null) {
-                onePositions.push({ row, col });
-            }
-        }
-    }
-
-    if (onePositions.length === 0) {
-        return null; // 1 が一つもない場合は null を返す
-    }
-
-    let minRow = Infinity;
-    let maxRow = -Infinity;
-    let minCol = Infinity;
-    let maxCol = -Infinity;
-
-    for (const pos of onePositions) {
-        minRow = Math.min(minRow, pos.row);
-        maxRow = Math.max(maxRow, pos.row);
-        minCol = Math.min(minCol, pos.col);
-        maxCol = Math.max(maxCol, pos.col);
-    }
-
-    const x = minCol;
-    const y = minRow;
-    const height = maxRow - minRow + 1;
-    const width = maxCol - minCol + 1;
-
-    return { x, y, height, width };
 }

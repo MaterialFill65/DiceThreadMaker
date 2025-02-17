@@ -250,10 +250,7 @@ body {
   border-radius: 4px;
   margin-top: 10px;
 }
-.stage{
-  touch-action: none;
-  box-shadow: 0 0 0 3px red;  
-}
+
 
 * {
   font-family: sans-serif

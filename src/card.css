@@ -85,3 +85,9 @@
 .control-panel input {
   width: 50px;
 }
+
+.stage{
+  touch-action: none;
+  box-shadow: 0 0 0 3px red;  
+  transform-origin: left top;
+}
