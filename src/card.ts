@@ -31,7 +31,7 @@ function createCardElement(data: Card) {
     const nameElement = document.createElement("h1");
     nameElement.id = "name";
     nameElement.innerHTML = data.name;
-    if(data.font){
+    if (data.font) {
         nameElement.style.fontSize = `${data.font}px`
     }
     const cardElement = document.createElement("div");
@@ -86,15 +86,78 @@ export class cardGrid {
     widthInput!: HTMLInputElement;
     heightDiv!: HTMLDivElement;
     widthDiv!: HTMLDivElement;
+    isTwoFingerDragging: boolean;
 
     constructor(app: HTMLDivElement) {
         this.stage.classList.add("stage");
-        let isDragging = false;
         let shiftX = 0;
         let shiftY = 0;
-        let pointerId: number | null;
+        let isDragging: boolean = false;
+
+        // タッチイベント用の変数
+        let initialDistance = 0;
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+        this.isTwoFingerDragging = false;
 
         this.createControlPanel(app);
+
+        // タッチイベントハンドラー追加
+        document.body.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                initialDistance = Math.hypot(
+                    touch1.clientX - touch2.clientX,
+                    touch1.clientY - touch2.clientY
+                );
+                // 2本指の中心点を記録
+                lastTouchX = (touch1.clientX + touch2.clientX) / 2;
+                lastTouchY = (touch1.clientY + touch2.clientY) / 2;
+                this.isTwoFingerDragging = true;
+            }
+        }, { passive: false });
+
+        document.body.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentDistance = Math.hypot(
+                    touch1.clientX - touch2.clientX,
+                    touch1.clientY - touch2.clientY
+                );
+
+                // 現在の2本指の中心点
+                const centerX = (touch1.clientX + touch2.clientX) / 2;
+                const centerY = (touch1.clientY + touch2.clientY) / 2;
+
+                // 移動量を計算
+                const moveX = centerX - lastTouchX;
+                const moveY = centerY - lastTouchY;
+
+                // 移動とズームを同時に適用
+                const scaleAmount = (currentDistance - initialDistance) * 0.01;
+                this.zoom(scaleAmount, centerX, centerY);
+                this.moveGrid(this.translates.x + moveX, this.translates.y + moveY);
+
+                // 中心点を更新
+                lastTouchX = centerX;
+                lastTouchY = centerY;
+
+                initialDistance = currentDistance;
+            }
+        }, { passive: false });
+
+        document.body.addEventListener('touchend', () => {
+            initialDistance = 0;
+            this.isTwoFingerDragging = false;
+        });
+        document.body.addEventListener('touchcancel', () => {
+            initialDistance = 0;
+            this.isTwoFingerDragging = false;
+        });
 
         document.body.addEventListener("pointerdown", (e) => {
             const target = e.target as HTMLElement;
@@ -106,34 +169,31 @@ export class cardGrid {
             ) {
                 return;
             }
-            isDragging = true;
             shiftX = e.pageX - this.translates.x;
             shiftY = e.pageY - this.translates.y;
             this.stage.style.cursor = "grabbing";
-            pointerId = e.pointerId;
+            isDragging = true;
         });
 
         document.body.addEventListener("pointerup", (e) => {
-            if (pointerId !== e.pointerId) return;
+            if (isDragging === false) return;
             e.preventDefault();
-            isDragging = false;
             this.stage.style.cursor = "default";
+            isDragging = false
         });
         document.body.addEventListener("pointerleave", (e) => {
-            if (pointerId !== e.pointerId) return;
+            if (isDragging === false) return;
             e.preventDefault();
-            isDragging = false;
             this.stage.style.cursor = "default";
+            isDragging = false
         });
 
         document.body.addEventListener("pointermove", (e) => {
-            if (pointerId !== e.pointerId) return;
-            if (!isDragging) return;
+            if (isDragging === false || this.isTwoFingerDragging) return;
             e.preventDefault();
             const x = e.pageX - shiftX;
             const y = e.pageY - shiftY;
             this.moveGrid(x, y)
-
         });
 
         document.body.addEventListener("wheel", (e) => {
@@ -216,7 +276,7 @@ export class cardGrid {
     private find(x: number, y: number) {
         const normal_x = Math.min(Math.max(0, x), this.grid[0].length - 1); // 正規化
         const normal_y = Math.min(Math.max(0, y), this.grid.length - 1);
-        return {x: Math.floor(normal_x), y: Math.floor(normal_y) }
+        return { x: Math.floor(normal_x), y: Math.floor(normal_y) }
         // return findNearestZeroBFS(this.grid, { x: normal_x, y: normal_y });
     }
 
@@ -253,13 +313,18 @@ export class cardGrid {
         if (!this.pointers[ev.pointerId]) {
             return;
         }
+        if(this.isTwoFingerDragging){
+            this.pointers[ev.pointerId]!.target_pos = this.pointers[ev.pointerId]!.meta.position! as {x: number, y: number};
+            this.stopDrag(ev)
+            this.pointers[ev.pointerId] = null
+        }
         const { elements, shift } = this.pointers[ev.pointerId]!;
 
         elements.card.style.transform = `translate(${ev.pageX / this.scale - this.translates.x / this.scale - shift.x}px, ${ev.pageY / this.scale - this.translates.y / this.scale - shift.y}px)`;
 
         const pos = elements.card.getBoundingClientRect();
         const result = this.find(
-            (pos.left + pos.width / 2 - this.translates.x) / (pos.width ),
+            (pos.left + pos.width / 2 - this.translates.x) / (pos.width),
             (pos.top + pos.height / 2 - this.translates.y) / (pos.height)
         );
         const { x, y } = result;
@@ -427,10 +492,10 @@ export class cardGrid {
                 meta.card.querySelector("div#cardInner")! as HTMLDivElement
             ).style.background = meta.data.background;
             const imgElement = meta.card.querySelector("img")!
-            if (meta.data.main_img){
+            if (meta.data.main_img) {
                 imgElement.src = meta.data.main_img;
                 imgElement.style.display = ""
-            }else{
+            } else {
                 imgElement.style.display = "none"
             }
             modal.remove();
