@@ -330,6 +330,8 @@ export class Card {
         if (this.position && this.parent.grid[this.position.y][this.position.x] === this) {
             this.parent.grid[this.position.y][this.position.x] = null;
         }
+        this.times.forEach(e=>clearInterval(e))
+        this.times = []
         this.parent.grid[y][x] = this;
 
         this.cardElement.style.transition = "";
@@ -448,7 +450,7 @@ export class Grid {
         }, { passive: false })
         document.body.addEventListener("pointerdown", (ev) => {
             const target = ev.target as HTMLElement;
-            if (!Array.from(this.stage.children).some((child) => child.contains(target)) && target !== document.body && target !== this.app) {
+            if (!Array.from(this.stage.children).some((child) => child.contains(target)) && target !== document.body && target !== this.app && target !== this.stage) {
                 return;
             }
             this.pointerCache[ev.pointerId] = {
