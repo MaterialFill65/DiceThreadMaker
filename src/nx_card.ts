@@ -498,13 +498,23 @@ export class Grid {
                 const centerY = (y1 + y2) / 2;
 
                 if (prevDiff > 0) {
+                    // 移動量の計算
                     const moveX = centerX - lastCenterX;
                     const moveY = centerY - lastCenterY;
                     
-                    const diffScale = curDiff - prevDiff;
-                    const scaleScale = diffScale * 0.01;
-                    this.zoom(scaleScale, centerX, centerY);
-                    this.move(this.translates.x + moveX, this.translates.y + moveY);
+                    // スケール変更の計算
+                    const scaleDiff = (curDiff - prevDiff) / prevDiff;  // 相対的な変化量を計算
+                    const scaleAmount = scaleDiff * this.scale;   // より滑らかな変化に
+                    
+                    this.zoom(scaleAmount, centerX, centerY);
+                    
+                    // 移動の適用（スケールに応じて移動量を調整）
+                    const adjustedMoveX = moveX * (1 / this.scale);
+                    const adjustedMoveY = moveY * (1 / this.scale);
+                    this.move(
+                        this.translates.x + adjustedMoveX,
+                        this.translates.y + adjustedMoveY
+                    );
                 }
 
                 prevDiff = curDiff;
