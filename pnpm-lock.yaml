@@ -14,6 +14,9 @@ importers:
       html2canvas-pro:
         specifier: ^1.5.8
         version: 1.5.8
+      modern-screenshot:
+        specifier: ^4.6.0
+        version: 4.6.0
     devDependencies:
       typescript:
         specifier: ~5.7.2
@@ -296,6 +299,9 @@ packages:
     resolution: {integrity: sha512-bVGAU7IvhBwBlRAmX6QhekX8lsaxmYoF6zIwf/HNlHscjx+KN8jw/U4PQRYqeEVm9+m13hcS1l5ChJB9/e29Lw==}
     engines: {node: '>=16.0.0'}
 
+  modern-screenshot@4.6.0:
+    resolution: {integrity: sha512-L7osQAWpJiWY1ST1elhLRSGD5i7og5uoICqiXs38whAjWtIayp3cBMJmyML4iyJcBhRfHOyciq1g1Ft5G0QvSg==}
+
   nanoid@3.3.8:
     resolution: {integrity: sha512-WNLf5Sd8oZxOm+TzppcYk8gVOgP+l58xNy58D0nbUnOxOWRWvlcCV4kUF7ltmI6PsrLl/BgKEyS4mqsGChFN0w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
@@ -547,6 +553,8 @@ snapshots:
     dependencies:
       css-line-break: 2.1.0
       text-segmentation: 1.0.3
+
+  modern-screenshot@4.6.0: {}
 
   nanoid@3.3.8: {}
 
