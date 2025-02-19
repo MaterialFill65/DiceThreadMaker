@@ -495,7 +495,7 @@ export class Grid {
                 const x2 = cache[1].ev.clientX;
                 const y2 = cache[1].ev.clientY;
                 
-                const curDiff = Math.abs(x2 - x1);
+                const curDiff = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                 const centerX = (x1 + x2) / 2;
                 const centerY = (y1 + y2) / 2;
 

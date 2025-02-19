@@ -121,9 +121,14 @@ export class App {
     private async exportAsImage() {
         try {
             this.grid.stage.style.boxShadow = "none";
-            const png = await domToPng(this.grid.stage,{
+            this.grid.stage.style.transform = ""
+            const png = await domToPng(this.grid.stage, {
                 features: {
                     fixSvgXmlDecode: true
+                },
+                style: {
+                    "transform": `scale(${this.grid.scale})`,
+                    "transformOrigin": `top left`
                 }
             });
             
