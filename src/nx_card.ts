@@ -102,6 +102,7 @@ export class Card {
 
     private handleContextMenu(ev: MouseEvent) {
         ev.preventDefault();
+        if (Object.keys(this.parent.cardPointers).length > 0) return;
         this.createContextMenu(ev.pageX, ev.pageY);
     }
 
@@ -135,15 +136,15 @@ export class Card {
         menu.style.left = `${x}px`;
         menu.style.top = `${y}px`;
 
-        const closeMenu = (e: MouseEvent) => {
+        const closeMenu = (e: PointerEvent) => {
             if (!menu.contains(e.target as Node)) {
                 menu.remove();
-                document.removeEventListener("click", closeMenu);
+                document.body.removeEventListener("pointerdown", closeMenu);
+                document.body.removeEventListener("pointerup", closeMenu);
             }
         };
-        setTimeout(() => {
-            document.addEventListener("click", closeMenu);
-        }, 0);
+        document.body.addEventListener("pointerdown", closeMenu);
+        document.body.addEventListener("pointerup", closeMenu);
     }
 
     private openEditModal() {
@@ -227,6 +228,7 @@ export class Card {
     }
 
     private pointerDown(ev: PointerEvent) {
+        if (ev.button === 2) return;
         if (ev.ctrlKey) {
             console.info("クリックされましたが、Ctrlキーが押されています。無視します。")
             return;
