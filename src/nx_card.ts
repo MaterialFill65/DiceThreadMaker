@@ -249,7 +249,7 @@ export class Card {
         if (ev.pointerType === 'touch') {
             this.isLongPressing = false;
             this.initialTouchPosition = { x: ev.clientX, y: ev.clientY };
-            this.longPressTimeout = window.setTimeout(() => {
+            this.longPressTimeout = setTimeout(() => {
                 this.isLongPressing = true;
                 this.createContextMenu(ev.pageX, ev.pageY);
             }, this.LONG_PRESS_DURATION);
