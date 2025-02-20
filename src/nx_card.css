@@ -159,3 +159,7 @@
   height: 20px;
   width: 20px;
 }
+
+body{
+  overflow: hidden;
+}

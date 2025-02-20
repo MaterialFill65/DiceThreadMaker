@@ -182,7 +182,7 @@ export class App {
             link.download = 'cards.png';
             link.click();
 
-            document.body.removeChild(stageElement);
+            stageElement.remove();
         } catch (e) {
             console.warn(e);
             alert("画像の作成に失敗しました。");

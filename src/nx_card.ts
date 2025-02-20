@@ -380,7 +380,7 @@ export class Card {
     }
     set name(name: string) {
         this.meta.name = name;
-        this.nameElement.innerHTML = `<div>${name}</div>`; // TODO: もっといい方法を考える
+        this.nameElement.innerHTML = `<div>${name}　</div>`; // TODO: もっといい方法を考える
     }
     get background() {
         return this.meta.background;
