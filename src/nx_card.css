@@ -1,7 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap');
+
 .card {
   --card-padding: 8px;
   --card-inner-size: 12px;
-
   position: absolute;
   width: 300px;
   height: 150px;
@@ -11,6 +12,12 @@
   user-select: none;
   touch-action: none;
   overflow: hidden;
+}
+.card h1, h2{
+  font-family: "Noto Sans JP";
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-style: normal;
 }
 
 .card-clone {
@@ -96,6 +103,9 @@
   margin: 0;
   left: 15px;
   bottom: 10px;
+  height: 87px;
+  display: flex;
+  align-items: center;
 }
 
 #num{

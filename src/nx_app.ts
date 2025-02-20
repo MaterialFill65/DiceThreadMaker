@@ -78,12 +78,41 @@ export class App {
         clearItem.onclick = () => this.clearAllCards();
         menu.appendChild(clearItem);
 
+
+        // 品質バー
+        const qualityItem = document.createElement('div');
+        qualityItem.className = 'menu-item';
+
+        const qualityLabel = document.createElement('label');
+        qualityLabel.textContent = '品質: ';
+        const scaleInput = document.createElement('input');
+        scaleInput.type = 'range';
+        scaleInput.min = '1';
+        scaleInput.max = '3';
+        scaleInput.step = '0.5';
+        scaleInput.value = '1';
+        
+        const scaleValue = document.createElement('span');
+        scaleValue.textContent = '1x';
+        scaleInput.oninput = () => {
+            scaleValue.textContent = `${scaleInput.value}x`;
+        };
+        qualityItem.appendChild(qualityLabel);
+        qualityItem.appendChild(scaleInput);
+        qualityItem.appendChild(scaleValue);
+        menu.appendChild(qualityItem);
+        
         // エクスポートボタン
+        const exportItem = document.createElement('div');
+        exportItem.className = 'menu-item';
+
         const exportButton = document.createElement('button');
-        exportButton.className = 'export-button';
         exportButton.textContent = '画像をエクスポート！';
-        exportButton.onclick = () => this.exportAsImage();
-        menu.appendChild(exportButton);
+        exportButton.className = 'export-button';
+        exportButton.onclick = () => this.exportAsImage(Number(scaleInput.value));
+
+        exportItem.appendChild(exportButton);
+        menu.appendChild(exportItem);
 
         document.body.appendChild(hamburgerMenu);
         document.body.appendChild(menu);
@@ -118,17 +147,23 @@ export class App {
         document.body.appendChild(cardList);
     }
 
-    private async exportAsImage() {
+    private async exportAsImage(scale: number) {
         try {
             this.grid.stage.style.boxShadow = "none";
             this.grid.stage.style.transform = ""
-            const png = await domToPng(this.grid.stage, {
+            const stageElement = this.grid.stage.cloneNode(true) as HTMLElement;
+            stageElement.style.opacity = "0";
+            stageElement.style.transform = `scale(${scale})`;
+            stageElement.style.transformOrigin = "1px 0px";
+
+            document.body.appendChild(stageElement);
+
+            const png = await domToPng(stageElement, {
                 features: {
                     fixSvgXmlDecode: true
                 },
-                style: {
-                    "transform": `scale(${this.grid.scale})`,
-                    "transformOrigin": `top left`
+                style:{
+                    opacity: "1",
                 }
             });
             
@@ -136,6 +171,8 @@ export class App {
             link.href = png;
             link.download = 'cards.png';
             link.click();
+
+            document.body.removeChild(stageElement);
         } catch (e) {
             console.warn(e);
             alert("画像の作成に失敗しました。");
