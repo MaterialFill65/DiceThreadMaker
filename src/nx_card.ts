@@ -191,12 +191,45 @@ export class Card {
         form.appendChild(bgInput);
 
         // 画像URL入力
+        const imgContainer = document.createElement("div");
+        imgContainer.style.display = "flex";
+        imgContainer.style.gap = "10px";
+        imgContainer.style.alignItems = "center";
+        
         const imgLabel = document.createElement("label");
         imgLabel.textContent = "画像URL:";
         const imgInput = document.createElement("input");
         imgInput.value = this.main_img;
-        form.appendChild(imgLabel);
-        form.appendChild(imgInput);
+        let dataURL = "";
+        
+        const uploadButton = document.createElement("button");
+        uploadButton.type = "button";
+        uploadButton.textContent = "↑";
+        uploadButton.onclick = () => {
+            const fileInput = document.createElement("input");
+            fileInput.type = "file";
+            fileInput.accept = "image/*";
+            fileInput.onchange = (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                const dataUrl = e.target?.result as string;
+                // ファイル名をinputに設定
+                imgInput.value = file.name;
+                // 実際の画像データはカードのmain_imgに直接設定
+                    dataURL = dataUrl;
+                };
+                reader.readAsDataURL(file);
+            }
+            };
+            fileInput.click();
+        };
+
+        imgContainer.appendChild(imgLabel);
+        imgContainer.appendChild(imgInput);
+        imgContainer.appendChild(uploadButton);
+        form.appendChild(imgContainer);
 
         // 数字表示トグル
         const numberVisibilityLabel = document.createElement("label");
@@ -219,7 +252,12 @@ export class Card {
             this.name = nameInput.value;
             this.font = Number(fontInput.value);
             this.background = bgInput.value;
-            this.main_img = imgInput.value;
+            if (this.main_img !== imgInput.value){
+                this.main_img = imgInput.value;
+            }
+            if (dataURL){
+                this.mainImgElement.src = dataURL;
+            }
             this.setNumberVisibility(numberVisibilityInput.checked);
             modal.remove();
         };
