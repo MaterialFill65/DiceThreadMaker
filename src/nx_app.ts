@@ -6,6 +6,7 @@ export class App {
     private readonly app: HTMLDivElement;
     private readonly grid: Grid;
     private readonly data: CardMeta[];
+    private numberVisible: boolean = true;
 
     constructor(app: HTMLDivElement) {
         this.app = app;
@@ -78,6 +79,15 @@ export class App {
         clearItem.onclick = () => this.clearAllCards();
         menu.appendChild(clearItem);
 
+        // 数字表示切替ボタン
+        const toggleNumbersItem = document.createElement('div');
+        toggleNumbersItem.className = 'menu-item';
+        toggleNumbersItem.textContent = this.numberVisible ? '数字を消す' : '数字を表示';
+        toggleNumbersItem.onclick = () => {
+            this.toggleNumbers(!this.numberVisible);
+            toggleNumbersItem.textContent = this.numberVisible ? '数字を消す' : '数字を表示';
+        };
+        menu.appendChild(toggleNumbersItem);
 
         // 品質バー
         const qualityItem = document.createElement('div');
@@ -192,6 +202,20 @@ export class App {
                 });
             });
         }
+    }
+
+    private toggleNumbers(show: boolean) {
+        this.numberVisible = show
+        this.grid.grid.forEach(row => {
+            row.forEach(card => {
+                if (card) {
+                    const numElement = card.cardElement.querySelector('#num') as HTMLElement;
+                    if (numElement) {
+                        numElement.style.visibility = show ? 'visible' : 'hidden';
+                    }
+                }
+            });
+        });
     }
 
     private setupResizeHandler() {
@@ -369,6 +393,8 @@ export class App {
             }
         ];
     }
+
+    
 }
 
 // アプリケーションの初期化
