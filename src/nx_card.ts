@@ -61,6 +61,7 @@ export class Card {
     private readonly LONG_PRESS_DURATION = 500; // 長押し判定の時間（ミリ秒）
     private isLongPressing = false;
     private initialTouchPosition = { x: 0, y: 0 };
+    private numberVisible: boolean = true;
 
     constructor(meta: CardMeta, x: number, y: number, grid: Grid) {
         this.meta = meta
@@ -197,6 +198,16 @@ export class Card {
         form.appendChild(imgLabel);
         form.appendChild(imgInput);
 
+        // 数字表示トグル
+        const numberVisibilityLabel = document.createElement("label");
+        numberVisibilityLabel.textContent = "数字を表示:";
+        const numberVisibilityInput = document.createElement("input");
+        numberVisibilityInput.type = "checkbox";
+        numberVisibilityInput.checked = this.numberVisible;
+        numberVisibilityInput.classList.add("numberVisible")
+        form.appendChild(numberVisibilityLabel);
+        form.appendChild(numberVisibilityInput);
+
         // ボタンコンテナ
         const buttonContainer = document.createElement("div");
         buttonContainer.className = "button-container";
@@ -209,6 +220,7 @@ export class Card {
             this.font = Number(fontInput.value);
             this.background = bgInput.value;
             this.main_img = imgInput.value;
+            this.setNumberVisibility(numberVisibilityInput.checked);
             modal.remove();
         };
         buttonContainer.appendChild(saveButton);
@@ -392,6 +404,18 @@ export class Card {
         this.nameElement.style.fontSize = `${fontSize}px`;
     }
 
+    public setNumberVisibility(visible: boolean) {
+        this.numberVisible = visible;
+        const numElement = this.cardElement.querySelector('#num') as HTMLElement;
+        if (numElement) {
+            numElement.style.visibility = visible ? 'visible' : 'hidden';
+        }
+    }
+
+    public getNumberVisibility(): boolean {
+        return this.numberVisible;
+    }
+
     destroy() {
         this.cardElement.remove()
     }
@@ -408,7 +432,7 @@ type pointerMeta = {
 };
 
 export class Grid {
-    grid: GridType = [[null]];
+    readonly grid: GridType = [[null]];
     readonly oneblock = {
         width: 316 as const,
         height: 166 as const

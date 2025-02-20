@@ -205,14 +205,11 @@ export class App {
     }
 
     private toggleNumbers(show: boolean) {
-        this.numberVisible = show
+        this.numberVisible = show;
         this.grid.grid.forEach(row => {
             row.forEach(card => {
                 if (card) {
-                    const numElement = card.cardElement.querySelector('#num') as HTMLElement;
-                    if (numElement) {
-                        numElement.style.visibility = show ? 'visible' : 'hidden';
-                    }
+                    card.setNumberVisibility(show);
                 }
             });
         });

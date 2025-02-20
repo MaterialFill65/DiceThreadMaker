@@ -154,3 +154,8 @@
   font-size: 16px;
   box-sizing: border-box;
 }
+
+.numberVisible{
+  height: 20px;
+  width: 20px;
+}
