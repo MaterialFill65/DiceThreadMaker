@@ -5,8 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ダイススレ画 作成君</title>
     <script type="module" src="/src/nx_app.ts" defer></script>
+    <style>
+      .deprecation-banner {
+        background-color: #ffcc00;
+        border-top: 2px solid #ff9900;
+        border-bottom: 2px solid #ff9900;
+
+        color: #333;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+    
+      .deprecation-banner a {
+        color: #0000ff;
+        text-decoration: underline;
+      }
+    </style>
   </head>
   <body>
+    <div class="deprecation-banner">
+      このツールは非推奨となりました。詳細は<a href="https://bbs.animanch.com/board/4758188/l" target="_blank"
+        rel="noopener noreferrer">こちら</a>
+    </div>
     <div id="app">
     </div>
   </body>
